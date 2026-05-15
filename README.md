@@ -42,18 +42,26 @@ Open [http://localhost:8050](http://localhost:8050)
 
 ```
 csv-insights/
-├── app.py                # Dash app — layout, callbacks, UI assembly
-├── schema_detector.py    # Column semantic type detection (the core module)
-├── data_loader.py        # CSV ingestion via DuckDB, Parquet caching
-├── stats_engine.py       # Distributions, correlations, outlier detection
-├── chart_generator.py    # Auto-selects and builds Plotly figures
-├── insight_engine.py     # Hybrid: deterministic bullets + Ollama narrative
-├── assets/
-│   └── style.css         # Custom Dash CSS (auto-loaded by Dash)
-├── .cache/               # Auto-created — stores Parquet files
-└── requirements.txt
-```
-
+├── data/                       # Data Test
+│   ├── nyc_airbnb.csv          
+│   └── titanic.csv
+│
+├── src/
+│   ├── app/
+│   │   ├── app.py              # Dash app — layout, callbacks, UI assembly
+│   │   └── css/
+│   │       └── style.css       # Custom Dash CSS (auto-loaded by Dash)
+│   │
+│   ├── core/
+│   │   ├── chart_gen.py        # Auto-selects and builds Plotly figures
+│   │   ├── data_loader.py      # CSV ingestion via DuckDB, Parquet caching
+│   │   ├── insight_engine.py   # Hybrid: deterministic bullets + Ollama narrative
+│   │   ├── schema_detector.py  # Column semantic type detection (the core module) 
+│   │   └── stats_engine.py     # Distributions, correlations, outlier detection
+│   │
+│   └── requirements.txt
+│
+└── README.md
 ---
 
 ## How It Works
