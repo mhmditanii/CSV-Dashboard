@@ -9,7 +9,7 @@ Upload any CSV. Get instant charts and plain-English insights — no technical k
 ### 1. Clone & install
 
 ```bash
-git clone <your-repo-url>
+git clone [repo link](https://github.com/mhmditanii/CSV-Dashboard#)
 cd csv-insights
 pip install -r requirements.txt
 ```
