@@ -62,6 +62,8 @@ csv-insights/
 │   └── requirements.txt
 │
 └── README.md
+```
+
 ---
 
 ## How It Works
