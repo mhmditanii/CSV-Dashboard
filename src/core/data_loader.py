@@ -24,7 +24,7 @@ import pandas as pd
 
 log = logging.getLogger(__name__)
 
-CACHE_DIR = Path(".cache")
+CACHE_DIR = Path(__file__).parent.parent / ".cache"
 CACHE_DIR.mkdir(exist_ok=True)
 
 # Max rows returned to the UI for preview tables

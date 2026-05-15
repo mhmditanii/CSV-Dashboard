@@ -1,6 +1,0 @@
-duckdb
-pandas
-pyarrow
-python-dateutil
-ollama
-plotly
