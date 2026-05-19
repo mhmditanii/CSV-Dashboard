@@ -1,149 +1,75 @@
-# CSV Insights
+# Insights — Dash + Ollama CSV Dashboard MVP
 
-Upload any CSV. Get instant charts and plain-English insights — no technical knowledge required.
+A Dash MVP for the case study: upload any CSV and generate a non-technical dashboard with useful charts, tables, and plain-English insights.
 
----
+## What changed in this version
 
-## Quick Start
+This version intentionally uses Ollama much more heavily, but keeps the full CSV local.
 
-### 1. Clone & install
+Flow:
+
+1. User uploads CSV.
+2. The app loads the file locally.
+3. Python profiles columns and computes candidate insight views using NumPy/Pandas.
+4. Ollama receives only:
+   - column profiles
+   - valid candidate chart/table ideas
+   - 2 sample rows
+5. Ollama chooses the best 8–12 cards, explains why those features belong together, and rewrites:
+   - dashboard summary
+   - card titles
+   - x-axis/y-axis labels
+   - table labels
+   - takeaways
+6. Python renders and calculates everything locally.
+
+The full CSV is never sent to Ollama.
+
+## Run
 
 ```bash
-git clone https://github.com/mhmditanii/CSV-Dashboard.git
-cd 
 pip install -r requirements.txt
-```
-
-### 2. Set up Ollama (optional but recommended)
-
-Ollama runs the LLM locally — no API key, no cost, no data leaving your machine.
-
-```bash
-# Install Ollama: https://ollama.com/download
-# Then pull a model:
 ollama pull llama3
-# Start the server (runs in background):
-ollama serve
-```
-
-If Ollama is not running, the app still works — it falls back to rule-based insights automatically.
-
-### 3. Run
-
-```bash
 python app.py
 ```
 
-Open [http://localhost:8050](http://localhost:8050)
-
----
-
-## Project Structure
-
-```
-csv-insights/
-├── data/                       # Data Test
-│   ├── nyc_airbnb.csv          
-│   └── titanic.csv
-│
-├── src/
-│   ├── app/
-│   │   ├── app.py              # Dash app — layout, callbacks, UI assembly
-│   │   └── css/
-│   │       └── style.css       # Custom Dash CSS (auto-loaded by Dash)
-│   │
-│   ├── core/
-│   │   ├── chart_gen.py        # Auto-selects and builds Plotly figures
-│   │   ├── data_loader.py      # CSV ingestion via DuckDB, Parquet caching
-│   │   ├── insight_engine.py   # Hybrid: deterministic bullets + Ollama narrative
-│   │   ├── schema_detector.py  # Column semantic type detection (the core module) 
-│   │   └── stats_engine.py     # Distributions, correlations, outlier detection
-│   │
-│   └── requirements.txt
-│
-└── README.md
-```
-
----
-
-## How It Works
-
-```
-CSV Upload
-    │
-    ▼
-data_loader.py       DuckDB reads CSV → caches as Parquet
-    │
-    ▼
-schema_detector.py   Classifies every column: numeric / categorical /
-                     datetime / boolean / identifier / geographic / text
-    │
-    ▼
-stats_engine.py      Distributions, correlations, outliers, null rates
-    │
-    ▼
-chart_generator.py   Picks chart types based on semantic types,
-                     builds Plotly figures automatically
-    │
-    ▼
-insight_engine.py    Rule-based bullets (always) +
-                     Ollama narrative (if available)
-    │
-    ▼
-app.py               Renders dashboard in Dash
-```
-
----
-
-## Tested Datasets
-
-| Dataset     | Rows   | Columns | Notes                          |
-|-------------|--------|---------|--------------------------------|
-| Titanic     | 891    | 12      | Mixed types, missing values    |
-| NYC Airbnb  | 48,895 | 16      | Dates, geo coordinates, prices |
-
-Download links:
-- Titanic: https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv
-- Airbnb: https://raw.githubusercontent.com/erkansirin78/datasets/master/AB_NYC_2019.csv
-
----
-
-## Design Decisions & Trade-offs
-
-### Why DuckDB for CSV loading?
-DuckDB's `read_csv_auto` is 3–5× faster than `pd.read_csv` on files > 10k rows, auto-detects delimiters/encoding, and can query Parquet directly. The Parquet cache means subsequent interactions never re-parse the CSV.
-
-### Why not HDF5?
-HDF5 requires PyTables and handles mixed string/numeric DataFrames poorly. Parquet is DuckDB-native, smaller, and column-oriented — a better fit for this workload.
-
-### Why Ollama instead of OpenAI/Claude API?
-Local LLM = no API cost, no latency on network, no data leaving the user's machine. The quality trade-off is documented and the app degrades gracefully if Ollama is unavailable.
-
-### Why Dash over Streamlit?
-Dash gives full layout control (CSS grid, custom components), proper callback architecture, and production-grade routing. Streamlit's full-script re-run model is awkward for large DataFrame state.
-
-### What's cut (MVP scope)
-- No authentication
-- No persistent storage / database (Parquet cache is session-scoped)
-- No async job queue (Celery/Redis) — large files block the callback
-- No multi-file comparison
-- No CSV validation / sanitisation (security concern for production)
-- No cost controls / rate limiting on LLM
-
-### What's next
-- Background processing with Celery for files > 50MB
-- User-driven chart customisation (filter by column, change chart type)
-- Export dashboard as PDF / PNG
-- Replace Ollama with pluggable LLM provider (Anthropic, OpenAI)
-- Add authentication for multi-user deployments
-
----
-
-## Running in Production
+Optional:
 
 ```bash
-pip install gunicorn
-gunicorn app:server -w 2 -b 0.0.0.0:8050
+export OLLAMA_MODEL="llama3.1"
+python app.py
 ```
 
-Note: set `debug=False` in `app.run(...)` for production.
+Then open:
+
+```text
+http://127.0.0.1:8050
+```
+
+## Why Dash
+
+Dash is used because it is straightforward for a product-style upload workflow, supports interactive Plotly charts, and keeps the MVP easy to demo locally.
+
+## Design choices
+
+- **Ollama is the planner/polisher**, not the calculator.
+- **Python owns correctness**: data loading, validation, filtering, calculations, and rendering.
+- **Candidate-based planning** prevents Ollama from inventing bad column combinations.
+- **Tables and charts are both first-class** because business users often understand ranked summaries faster than dense charts.
+- **No raw scatter plots** for large datasets. Numeric relationships are shown as binned trends or tables.
+
+## Failure mode
+
+If Ollama is unavailable, the app falls back to deterministic selection and wording.
+
+## Known limitations
+
+- CSV parsing uses Pandas for reliability, while profiling and scoring rely heavily on NumPy arrays.
+- Ollama quality depends on the local model. `llama3.1` or a larger model generally gives better wording than small local models.
+- This is still an MVP, not a BI replacement.
+
+## Suggested demo datasets
+
+- Titanic CSV
+- NYC Airbnb 2019 CSV
+- Any business CSV with dates, categories, and numeric measures
