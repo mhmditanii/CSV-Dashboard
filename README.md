@@ -2,11 +2,7 @@
 
 A Dash MVP for the case study: upload any CSV and generate a non-technical dashboard with useful charts, tables, and plain-English insights.
 
-## What changed in this version
-
-This version intentionally uses Ollama much more heavily, but keeps the full CSV local.
-
-Flow:
+## Flow:
 
 1. User uploads CSV.
 2. The app loads the file locally.
